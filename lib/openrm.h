@@ -1,14 +1,15 @@
 #ifndef OPENRM_H
 #define OPENRM_H
 
-// Currently C language is not supported!
-// This header can be included by C++ only
+#include <stdbool.h>
 
 typedef enum {ORMError,ORMRubyError,ORMPrint} ORMEvent;
 typedef void(*ORMEventCallbackFunc)(ORMEvent type,void* data);
 
+#ifdef __cplusplus
 extern "C"
 {
+#endif
 
 /* MARK: OpenRM Context API */
 
@@ -27,6 +28,8 @@ const char *orm_GetGameDir();
 
 bool orm_RbEval(const char *str);
 
+#ifdef __cplusplus
 };
+#endif
 
 #endif
