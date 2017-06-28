@@ -1,3 +1,4 @@
+#include <zconf.h>
 #include "openrmpriv.h"
 #include "stringbuilder.h"
 
@@ -28,4 +29,12 @@ void ormpriv_SendEvent(ORMEvent type, void *data)
 VALUE ormpriv_CallLoadGameProject(VALUE arg)
 {
     return rb_funcall(Qnil,rb_intern("__OpenRM_LoadGameProject"),1,rb_str_new2(gameDir));
+}
+
+VALUE ormpriv_ChangeDirectory(VALUE dir)
+{
+    //chdir(StringValuePtr(dir));
+    // FIXME:dir is nil?!
+    chdir(gameDir); // FIXME:TEMP
+    return Qnil;
 }

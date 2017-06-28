@@ -1,6 +1,7 @@
 #include "openrm.h"
 #include <ruby.h>
 #include "openrmpriv.h"
+#include "rgss2.h"
 
 #define ORM_VERSION 0u
 
@@ -40,6 +41,8 @@ void orm_LoadGameProject()
         ormpriv_SendEvent(ORMError, (void *) "orm_LoadGameProject: GameDir is null! use `orm_SetGameDir` first!");
         return;
     }
+    loadRGSS2(); // TODO: call by liborm.rb
+    rb_define_singleton_method(Qnil,"__OpenRM_ChangeDirectory",ormpriv_ChangeDirectory,1);
     orm_RbEval("require_relative \"../liborm.rb\"");
     int status;
     rb_protect(ormpriv_CallLoadGameProject,Qnil,&status);

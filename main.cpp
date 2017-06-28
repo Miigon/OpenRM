@@ -11,6 +11,11 @@ void callback(ORMEvent type,void* data)
         case ORMRubyError:
             std::cerr << "Ruby exception: " << (char *)data << std::endl;
             break;
+        case ORMPrint:
+            std::cout << (char *)data << std::endl;
+            break;
+        case ORMRGSSNotImp:
+            std::cerr << "RGSS feature not implemented: " << (char *)data << std::endl;
         default:
             // do nothing
             break;

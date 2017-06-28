@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-typedef enum {ORMError,ORMRubyError,ORMPrint} ORMEvent;
+typedef enum {ORMError,ORMRubyError,ORMRGSSNotImp,ORMPrint} ORMEvent;
 typedef void(*ORMEventCallbackFunc)(ORMEvent type,void* data);
 
 #ifdef __cplusplus

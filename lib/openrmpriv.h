@@ -11,5 +11,6 @@ extern ORMEventCallbackFunc eventCb;
 void ormpriv_HandleRubyError();
 VALUE ormpriv_CallLoadGameProject(VALUE);
 void ormpriv_SendEvent(ORMEvent type, void *data);
+VALUE ormpriv_ChangeDirectory(VALUE);
 
 #endif

@@ -1,5 +1,5 @@
-def __OpenRM_debug(x)
-  print x + "\n" #TEMP#
+def __OpenRM_debug(x = "")
+  print x.to_s() + "\n"
 end
 
 def load_data(filename) # Load rvdata file
@@ -14,15 +14,16 @@ require "zlib"
 include Zlib
 
 def __OpenRM_LoadGameProject(path)
+  __OpenRM_ChangeDirectory path
   __OpenRM_debug "Loading game project from: " + path
   # TODO: Get script path in `game.ini`
-  scripts = load_data(path+"/Data/Scripts.rvdata") #TEMP#
+  scripts = load_data(path + "/Data/Scripts.rvdata") #TEMP#
   scripts.each{|s|
     # TODO: What is `s[0]`?
     decompressed_script = Inflate.inflate(s[2])
     if decompressed_script.length != 0
       __OpenRM_debug "Load script: " + s[1]
-      eval decompressed_script
+      eval(decompressed_script)
     end
   }
 end
