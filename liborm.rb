@@ -23,7 +23,7 @@ def __OpenRM_LoadGameProject(path)
     decompressed_script = Inflate.inflate(s[2])
     if decompressed_script.length != 0
       __OpenRM_debug "Load script: " + s[1]
-      eval(decompressed_script)
+      eval(decompressed_script,nil,s[1],1)
     end
   }
 end
