@@ -7,8 +7,6 @@
 /* MARK: classes and modules */
 VALUE RGSS2_Sprite,RGSS2_Window,RGSS2_Font,RGSS2_Table,RGSS2_Graphics,RGSS2_RPG;
 
-
-
 /* MARK: class Sprite */
 
 static VALUE RGSS2_Sprite_initialize(int argc,VALUE *argv,VALUE self)
@@ -47,7 +45,6 @@ static VALUE RGSS2_Font_default_name_EQ(VALUE value)
 }
 
 /* MARK: Table */
-
 
 struct RGSS2_Table_DATA
 {
@@ -220,7 +217,7 @@ static VALUE RGSS2_Table_LOAD(VALUE self_class,VALUE arg1)
     obj->xsize = conv.metadata->xsize;
     obj->ysize = conv.metadata->ysize;
     obj->zsize = conv.metadata->zsize;
-    obj->block = (int16_t*)data + sizeof(conv.metadata);
+    obj->block = (int16_t*)(data + sizeof(struct RGSS2_Table_DUMPED_METADATA) + sizeof(int32_t)/* data[16] and data[17] are always '\x58' and '\x02'*/);
     obj->dimensions = 0;
     if(obj->xsize > 1) obj->dimensions++;
     if(obj->ysize > 1) obj->dimensions++;
@@ -237,7 +234,8 @@ static VALUE RGSS2_Table_DUMP(VALUE self,VALUE d)
     conv.metadata->xsize = obj->xsize;
     conv.metadata->ysize = obj->ysize;
     conv.metadata->zsize = obj->zsize;
-    VALUE bin = rb_str_new(conv.binary, sizeof(conv.metadata));
+    VALUE bin = rb_str_new(conv.binary, sizeof(struct RGSS2_Table_DUMPED_METADATA));
+    bin = rb_str_cat(bin,"\x58\x02",2); // TODO:Less rb_str_cat
     return rb_str_cat(bin,obj->block,obj->xsize * obj->ysize * obj->zsize * sizeof(int16_t));
 }
 
@@ -275,13 +273,8 @@ void loadRGSS2()
     rb_define_method(RGSS2_Table,"resize",RGSS2_Table_resize,-1);
     rb_define_singleton_method(RGSS2_Table,"_load",RGSS2_Table_LOAD,1); // undoc
     rb_define_method(RGSS2_Table,"_dump",RGSS2_Table_DUMP,1); // undoc
+
     // Graphics module
     RGSS2_Graphics = rb_define_module("Graphics");
-
-    // RPG module
-    RGSS2_RPG = rb_define_module("RPG");
-
-    rb_define_class_under(RGSS2_RPG,"Actor",rb_cObject);
-
 
 }
