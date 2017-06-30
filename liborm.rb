@@ -41,3 +41,6 @@ tbl[14,27,19] = 621
 __OpenRM_debug tbl[14,27,19]
 end
 #TableTestScript()
+
+__OpenRM_debug "Loading RPG module"
+require_relative "rpgmodule.rb"
