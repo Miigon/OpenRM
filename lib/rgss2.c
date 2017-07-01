@@ -5,7 +5,8 @@
 #define NOT_IMPLEMENTED ormpriv_SendEvent(ORMRGSSNotImp,(void*)__FUNCTION__)
 
 /* MARK: classes and modules */
-VALUE RGSS2_Sprite,RGSS2_Window,RGSS2_Font,RGSS2_Table,RGSS2_Graphics,RGSS2_RPG;
+VALUE RGSS2_Sprite,RGSS2_Window,RGSS2_Font,RGSS2_Table,RGSS2_Graphics,RGSS2_RPG,
+    RGSS2_Color;
 
 /* MARK: class Sprite */
 
@@ -38,7 +39,7 @@ static VALUE RGSS2_Font_default_name()
     return RGSS2_Font_PROPERTY_default_name;
 }
 
-static VALUE RGSS2_Font_default_name_EQ(VALUE value)
+static VALUE RGSS2_Font_default_name_SET(VALUE value)
 {
     RGSS2_Font_PROPERTY_default_name = value;
     return value;
@@ -125,7 +126,7 @@ static VALUE RGSS2_Table_INDEX(int argc,VALUE *argv,VALUE self)
         return Qnil;
 }
 
-static VALUE RGSS2_Table_SETINDEX(int argc,VALUE *argv,VALUE self)
+static VALUE RGSS2_Table_INDEX_SET(int argc,VALUE *argv,VALUE self)
 {
     struct RGSS2_Table_DATA* obj;
     Data_Get_Struct(self, struct RGSS2_Table_DATA, obj);
@@ -211,9 +212,9 @@ static VALUE RGSS2_Table_LOAD(VALUE self_class,VALUE arg1)
     char *data = StringValuePtr(arg1);
     union RGSS2_Table_DUMPED_METADATA_CONV conv;
     conv.binary = data;
-    VALUE newTbl = RGSS2_Table_ALLOC(RGSS2_Table);
+    VALUE newObj = RGSS2_Table_ALLOC(RGSS2_Table);
     struct RGSS2_Table_DATA* obj;
-    Data_Get_Struct(newTbl,struct RGSS2_Table_DATA, obj);
+    Data_Get_Struct(newObj,struct RGSS2_Table_DATA, obj);
     obj->xsize = conv.metadata->xsize;
     obj->ysize = conv.metadata->ysize;
     obj->zsize = conv.metadata->zsize;
@@ -222,7 +223,7 @@ static VALUE RGSS2_Table_LOAD(VALUE self_class,VALUE arg1)
     if(obj->xsize > 1) obj->dimensions++;
     if(obj->ysize > 1) obj->dimensions++;
     if(obj->zsize > 1) obj->dimensions++;
-    return newTbl;
+    return newObj;
 }
 
 static VALUE RGSS2_Table_DUMP(VALUE self,VALUE d)
@@ -237,6 +238,164 @@ static VALUE RGSS2_Table_DUMP(VALUE self,VALUE d)
     VALUE bin = rb_str_new(conv.binary, sizeof(struct RGSS2_Table_DUMPED_METADATA));
     bin = rb_str_cat(bin,"\x58\x02",2); // TODO:Less rb_str_cat
     return rb_str_cat(bin,obj->block,obj->xsize * obj->ysize * obj->zsize * sizeof(int16_t));
+}
+
+/* Color */
+
+struct RGSS2_Color_DATA
+{
+    float red;
+    float green;
+    float blue;
+    float alpha;
+};
+
+static void RGSS2_Color_FREE(struct RGSS2_Color_DATA *obj)
+{
+    ruby_xfree(obj);
+}
+
+static VALUE RGSS2_Color_ALLOC(VALUE klass)
+{
+    return Data_Wrap_Struct(klass, NULL, RGSS2_Color_FREE, ruby_xmalloc(sizeof(struct RGSS2_Color_DATA)));
+}
+
+#define COLOR_FIX_RANGE(val) val = (val > (float)0xFF ? (float)0xFF : val) < (float)0 ? (float)0 : val
+
+static VALUE RGSS2_Color_set(int argc,VALUE *argv,VALUE self)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    if(argc != 1 && argc != 3 && argc != 4) rb_raise(rb_eArgError,"wrong number of arguments (given %d, expected 1 or 3..4)",argc);
+    if(argc == 1)
+    {
+        struct RGSS2_Color_DATA* src;
+        Data_Get_Struct(argv[0], struct RGSS2_Color_DATA, src);
+        *obj = *src;
+    }
+    else
+    {
+        obj->red = (float) FIX2LONG(argv[0]);
+        obj->green = (float) FIX2LONG(argv[1]);
+        obj->blue = (float) FIX2LONG(argv[2]);
+        obj->alpha = argc == 4 ? (float) FIX2LONG(argv[3]) : (float) 0xFF;
+        COLOR_FIX_RANGE(obj->red);
+        COLOR_FIX_RANGE(obj->green);
+        COLOR_FIX_RANGE(obj->blue);
+        COLOR_FIX_RANGE(obj->alpha);
+    }
+    return self;
+}
+
+static VALUE RGSS2_Color_initialize(int argc,VALUE *argv,VALUE self)
+{
+    return RGSS2_Color_set(argc,argv,self);
+}
+
+static VALUE RGSS2_Color_red(VALUE self)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    return INT2FIX(obj->red);
+}
+
+static VALUE RGSS2_Color_red_SET(VALUE self,VALUE val)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    obj->red = (float)FIX2SHORT(val);
+    COLOR_FIX_RANGE(obj->red);
+    return val;
+}
+
+static VALUE RGSS2_Color_blue(VALUE self)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    return INT2FIX(obj->blue);
+}
+
+static VALUE RGSS2_Color_blue_SET(VALUE self,VALUE val)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    obj->blue = (float)FIX2SHORT(val);
+    COLOR_FIX_RANGE(obj->blue);
+    return val;
+}
+
+static VALUE RGSS2_Color_green(VALUE self)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    return INT2FIX(obj->green);
+}
+
+static VALUE RGSS2_Color_green_SET(VALUE self,VALUE val)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    obj->green = (float)FIX2SHORT(val);
+    COLOR_FIX_RANGE(obj->green);
+    return val;
+}
+
+static VALUE RGSS2_Color_alpha(VALUE self)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    return INT2FIX(obj->alpha);
+}
+
+static VALUE RGSS2_Color_alpha_SET(VALUE self,VALUE val)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    obj->alpha = (float)FIX2SHORT(val);
+    COLOR_FIX_RANGE(obj->alpha);
+    return val;
+}
+
+union RGSS2_Color_CONV
+{
+    struct RGSS2_Color_DATA *data;
+    char *binary;
+};
+
+static VALUE RGSS2_Color_LOAD(VALUE self_class,VALUE arg1)
+{
+    char *data = StringValuePtr(arg1);
+    size_t len = RSTRING_LEN(arg1);
+    VALUE newObj = RGSS2_Color_ALLOC(RGSS2_Color);
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(newObj,struct RGSS2_Color_DATA, obj);
+    union RGSS2_Color_CONV conv;
+    conv.binary = data;
+    memset(obj,0,sizeof(struct RGSS2_Color_DATA));
+    if(len >= sizeof(double))
+    {
+        obj->red = conv.data->red;
+        if(len >= sizeof(double) * 2)
+        {
+            obj->green = conv.data->green;
+            if(len >= sizeof(double) * 3)
+            {
+                obj->blue = conv.data->blue;
+                if(len >= sizeof(double) * 4)
+                {
+                    obj->alpha = conv.data->alpha;
+                }
+            }
+        }
+    }
+    return newObj;
+}
+
+static VALUE RGSS2_Color_to_s(VALUE self)
+{
+    struct RGSS2_Color_DATA* obj;
+    Data_Get_Struct(self, struct RGSS2_Color_DATA, obj);
+    return rb_sprintf("(%f, %f, %f, %f)",obj->red,obj->green,obj->blue,obj->alpha);
 }
 
 /* MARK: Registration */
@@ -259,20 +418,41 @@ void loadRGSS2()
     RGSS2_Font = rb_define_class("Font",rb_cObject);
     rb_define_method(RGSS2_Font,"initialize",RGSS2_Font_initialize,-1);
     rb_define_singleton_method(RGSS2_Font,"default_name",RGSS2_Font_default_name,0);
-    rb_define_singleton_method(RGSS2_Font,"default_name=",RGSS2_Font_default_name_EQ,1);
+    rb_define_singleton_method(RGSS2_Font,"default_name=",RGSS2_Font_default_name_SET,1);
 
     // Table
     RGSS2_Table = rb_define_class("Table",rb_cObject);
     rb_define_alloc_func(RGSS2_Table,RGSS2_Table_ALLOC);
     rb_define_method(RGSS2_Table,"initialize",RGSS2_Table_initialize,-1);
     rb_define_method(RGSS2_Table,"[]",RGSS2_Table_INDEX,-1);
-    rb_define_method(RGSS2_Table,"[]=",RGSS2_Table_SETINDEX,-1);
+    rb_define_method(RGSS2_Table,"[]=",RGSS2_Table_INDEX_SET,-1);
     rb_define_method(RGSS2_Table,"xsize",RGSS2_Table_xsize,0);
     rb_define_method(RGSS2_Table,"ysize",RGSS2_Table_ysize,0);
     rb_define_method(RGSS2_Table,"zsize",RGSS2_Table_zsize,0);
     rb_define_method(RGSS2_Table,"resize",RGSS2_Table_resize,-1);
     rb_define_singleton_method(RGSS2_Table,"_load",RGSS2_Table_LOAD,1); // undoc
     rb_define_method(RGSS2_Table,"_dump",RGSS2_Table_DUMP,1); // undoc
+
+    // Color
+
+    RGSS2_Color = rb_define_class("Color",rb_cObject);
+    rb_define_alloc_func(RGSS2_Color,RGSS2_Color_ALLOC);
+    rb_define_method(RGSS2_Color,"initialize",RGSS2_Color_initialize,-1);
+    rb_define_method(RGSS2_Color,"set",RGSS2_Color_set,-1);
+    rb_define_method(RGSS2_Color,"red",RGSS2_Color_red,0);
+    rb_define_method(RGSS2_Color,"red=",RGSS2_Color_red_SET,1);
+    rb_define_method(RGSS2_Color,"green",RGSS2_Color_green,0);
+    rb_define_method(RGSS2_Color,"green=",RGSS2_Color_green_SET,1);
+    rb_define_method(RGSS2_Color,"blue",RGSS2_Color_blue,0);
+    rb_define_method(RGSS2_Color,"blue=",RGSS2_Color_blue_SET,1);
+    rb_define_method(RGSS2_Color,"alpha",RGSS2_Color_alpha,0);
+    rb_define_method(RGSS2_Color,"alpha=",RGSS2_Color_alpha_SET,1);
+    rb_define_singleton_method(RGSS2_Color,"_load",RGSS2_Color_LOAD,1); // undoc
+    // TODO: dump
+    // TODO: `==` and `===`
+    // TODO: egl?
+    rb_define_method(RGSS2_Color,"to_s",RGSS2_Color_to_s,0); // undoc
+
 
     // Graphics module
     RGSS2_Graphics = rb_define_module("Graphics");
